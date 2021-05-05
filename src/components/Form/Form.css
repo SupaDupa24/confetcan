@@ -1,0 +1,9 @@
+article {
+        z-index: 10;
+}
+
+
+
+.hover-black:hover {
+    background-color: #000 !important;
+  }

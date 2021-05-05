@@ -2,14 +2,14 @@ import React from 'react';
 import { Canvas } from './components/Canvas/Canvas';
 import Navigation from './components/Navigation/Navigation';
 import { Greeting } from './components/Greeting/Greeting';
-import { Form } from './components/Form/Form';
+import { Jumbo } from './components/Jumbo/Jumbo';
 import './App.css';
 
 
 const initialState = {
   input: '',
-  imageUrl: '',
-  boxes: [],
+  
+ 
   route: 'intro',
   showJumbo: false,
   isProfileOpen: false,
@@ -20,8 +20,7 @@ const initialState = {
     email: '',
     entries: 0,
     joined: '',
-    age: 0,
-    pet: ''
+    
   }
 }
 
@@ -32,9 +31,7 @@ class App extends React.Component {
     this.state= initialState;
   }
 
-  componentDidMount(){
-    this.setState({showJumbo:true})
-  }
+  
 
 
 
@@ -47,20 +44,53 @@ class App extends React.Component {
     this.setState({route: route});
   }
 
-  toggleModal = () => {
-    this.setState(state => ({
-      ...state,
-      isProfileOpen: !state.isProfileOpen,
-    }));
+  onButtonSubmit = () => {
+    this.setState({imageUrl: this.state.input});
+      fetch('http://127.0.0.1:3000/imageurl', {
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': window.sessionStorage.getItem('token')
+        },
+        body: JSON.stringify({
+          input: this.state.input
+        })
+      })
+      .then(response => response.json())
+      .then(response => {
+        if (response) {
+          fetch('http://127.0.0.1:3000/image', {
+            method: 'put',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': window.sessionStorage.getItem('token')
+            },
+            body: JSON.stringify({
+              id: this.state.user.id
+            })
+          })
+            .then(response => response.json())
+            .then(count => {
+              this.setState(Object.assign(this.state.user, { entries: count}))
+            })
+            .catch(console.log)
+
+        }
+        this.displayFaceBox(this.calculateFaceLocation(response))
+      })
+      .catch(err => console.log(err));
   }
+
+ 
 
   render() {
   return (
     <div className="App">
       <Canvas />
       <Navigation onRouteChange={this.onRouteChange} isSignedIn={this.isSignedIn} />
-      <Greeting />
-      <Form />
+      <Jumbo>
+        <Greeting onClick={this.onButtonSubmit} />
+      </Jumbo>
 
 
       
