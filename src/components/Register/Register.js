@@ -1,14 +1,13 @@
 import React from 'react';
-import './Form.css';
+import './Register.css';
 
-class Form extends React.Component {
+class Register extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      name: '',
-      email:'',
+      email: '',
       password: '',
-    
+      name: ''
     }
   }
 
@@ -25,7 +24,7 @@ class Form extends React.Component {
   }
 
   onSubmitSignIn = () => {
-    fetch('http://127.0.0.1:3000/register', {
+    fetch('http://localhost:3000/register', {
       method: 'post',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -81,7 +80,7 @@ class Form extends React.Component {
                 />
               </div>
             </fieldset>
-            <div>
+            <div className="">
               <input
                 onClick={this.onSubmitSignIn}
                 className="b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6 dib"
@@ -96,4 +95,4 @@ class Form extends React.Component {
   }
 }
 
-export default Form;
+export default Register;

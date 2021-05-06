@@ -1,17 +1,17 @@
 import React from 'react';
 import { Canvas } from './components/Canvas/Canvas';
 import Navigation from './components/Navigation/Navigation';
-import { Greeting } from './components/Greeting/Greeting';
 import { Jumbo } from './components/Jumbo/Jumbo';
+import Profile from './components/Profile/Profile';
+import Modal from './components/Modal/Modal';
+import Signin from './components/Signin/Signin';
+import Register from './components/Register/Register';
 import './App.css';
 
 
 const initialState = {
   input: '',
-  
- 
   route: 'intro',
-  showJumbo: false,
   isProfileOpen: false,
   isSignedIn: false,
   user: {
@@ -31,6 +31,40 @@ class App extends React.Component {
     this.state= initialState;
   }
 
+
+  componentDidMount() {
+    const token = window.sessionStorage.getItem('token');
+    if (token) {
+      fetch('http://localhost:3000/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token
+        }
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.id) {
+            fetch(`http://localhost:3000/profile/${data.id}`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token
+              }
+            })
+            .then(response => response.json())
+            .then(user => {
+              if (user && user.email) {
+                this.loadUser(user)
+                this.onRouteChange('home');
+              }
+            })
+          }
+        })
+        .catch(console.log)
+    }
+  }
+
   
 
 
@@ -44,43 +78,22 @@ class App extends React.Component {
     this.setState({route: route});
   }
 
-  onButtonSubmit = () => {
-    this.setState({imageUrl: this.state.input});
-      fetch('http://127.0.0.1:3000/imageurl', {
-        method: 'post',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': window.sessionStorage.getItem('token')
-        },
-        body: JSON.stringify({
-          input: this.state.input
-        })
-      })
-      .then(response => response.json())
-      .then(response => {
-        if (response) {
-          fetch('http://127.0.0.1:3000/image', {
-            method: 'put',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': window.sessionStorage.getItem('token')
-            },
-            body: JSON.stringify({
-              id: this.state.user.id
-            })
-          })
-            .then(response => response.json())
-            .then(count => {
-              this.setState(Object.assign(this.state.user, { entries: count}))
-            })
-            .catch(console.log)
-
-        }
-        this.displayFaceBox(this.calculateFaceLocation(response))
-      })
-      .catch(err => console.log(err));
+  loadUser = (data) => {
+    this.setState({user: {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      entries: data.entries,
+      joined: data.joined
+    }})
   }
 
+  toggleModal = () => {
+    this.setState(state => ({
+      ...state,
+      isProfileOpen: !state.isProfileOpen,
+    }));
+  }
  
 
   render() {
@@ -88,10 +101,23 @@ class App extends React.Component {
     <div className="App">
       <Canvas />
       <Navigation onRouteChange={this.onRouteChange} isSignedIn={this.isSignedIn} />
+      
+      { this.state.route === 'intro' ?
       <Jumbo>
-        <Greeting onClick={this.onButtonSubmit} />
-      </Jumbo>
-
+         { 
+          this.state.isProfileOpen &&
+            <Modal>
+              <Profile isProfileOpen={this.isProfileOpen} toggleModal={this.toggleModal} user={this.state.user} loadUser={this.loadUser} />
+            </Modal>
+           }
+        
+      </Jumbo> : 
+      (
+        this.state.route === 'signin' ?
+       <Signin loadUser={this.loadUser} onRouteChange={this.onRouteChange}/>
+        : <Register loadUser={this.loadUser} onRouteChange={this.onRouteChange}/>
+      )
+      }
 
       
     </div>
